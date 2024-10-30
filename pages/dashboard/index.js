@@ -20,7 +20,7 @@ const Dashboard = () => {
     totalPages,
     fetchClipboards,
     handlePageChange,
-    initializeSocket,
+    initializePusher,
   } = useClipboardManager(data);
 
   useEffect(() => {
@@ -32,10 +32,10 @@ const Dashboard = () => {
     }
 
     if (status === "authenticated") {
-      initializeSocket();
+      initializePusher();
       fetchClipboards(1);
     }
-  }, [status, router, initializeSocket, fetchClipboards]);
+  }, [status, router, initializePusher, fetchClipboards]);
 
   return (
     <>

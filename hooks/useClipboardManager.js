@@ -1,33 +1,29 @@
 import { useState, useCallback, useRef } from "react";
-import { io } from "socket.io-client";
+import Pusher from "pusher-js";
 
 const useClipboardManager = (data) => {
   const [clipboards, setClipboards] = useState([]);
   const [loading, setLoading] = useState(true);
-  const socketRef = useRef(null);
+  const pusherRef = useRef(null);
+  const channelRef = useRef(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [itemsPerPage] = useState(10);
 
-  const initializeSocket = useCallback(() => {
-    // Create socket connection
-    socketRef.current = io(
-      {
-        path: "/api/socket",
-      },
-      {
-        transports: ["polling", "websocket"],
-        reconnectionAttempts: 10,
-        reconnectionDelay: 5000,
-        autoConnect: false,
-      }
-    );
+  const initializePusher = useCallback(() => {
+    // Initialize Pusher
+    pusherRef.current = new Pusher(process.env.NEXT_PUBLIC_PUSHER_KEY, {
+      cluster: process.env.NEXT_PUBLIC_PUSHER_CLUSTER,
+      forceTLS: true,
+      authEndpoint: "/api/pusher/auth",
+    });
 
-    // Join user-specific room
-    socketRef.current.emit("join-room", data.user.id);
+    // Subscribe to user-specific channel
+    const channelName = `private-user-${data.user.id}`;
+    channelRef.current = pusherRef.current.subscribe(channelName);
 
     // Listen for clipboard updates
-    socketRef.current.on("clipboard-update", (newClipboard) => {
+    channelRef.current.bind("clipboard-update", (newClipboard) => {
       setClipboards((prevClipboards) => {
         const exists = prevClipboards.some((cb) => cb._id === newClipboard._id);
         if (exists) {
@@ -39,18 +35,25 @@ const useClipboardManager = (data) => {
       });
     });
 
-    socketRef.current.on("delete_copy", (deletedCopy) => {
+    // Listen for clipboard deletions
+    channelRef.current.bind("delete_copy", (deletedCopy) => {
       setClipboards((prevClipboards) =>
         prevClipboards.filter((cb) => cb._id !== deletedCopy.clipboardId)
       );
     });
-    socketRef.current.on("connect_error", (error) => {
-      console.error("Socket connection error:", error);
+
+    // Handle connection errors
+    pusherRef.current.connection.bind("error", (error) => {
+      console.error("Pusher connection error:", error);
     });
 
     return () => {
-      if (socketRef.current) {
-        socketRef.current.disconnect();
+      if (channelRef.current) {
+        channelRef.current.unbind_all();
+        pusherRef.current.unsubscribe(channelName);
+      }
+      if (pusherRef.current) {
+        pusherRef.current.disconnect();
       }
     };
   }, [data?.user?.id]);
@@ -81,12 +84,14 @@ const useClipboardManager = (data) => {
     },
     [itemsPerPage]
   );
+
   const handlePageChange = useCallback(
     (newPage) => {
       fetchClipboards(newPage);
     },
     [fetchClipboards]
   );
+
   const copyTheClipboardContent = useCallback(async (content) => {
     try {
       await navigator.clipboard.writeText(content);
@@ -105,7 +110,7 @@ const useClipboardManager = (data) => {
     itemsPerPage,
     fetchClipboards,
     handlePageChange,
-    initializeSocket,
+    initializePusher, // Changed from initializeSocket to initializePusher
   };
 };
 
