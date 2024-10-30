@@ -15,10 +15,10 @@
     "mongoose": "^8.7.3",
     "next": "15.0.1",
     "next-auth": "^4.24.10",
+    "pusher": "^5.2.0",
+    "pusher-js": "^8.4.0-rc2",
     "react": "^18.2.0",
-    "react-dom": "^18.2.0",
-    "socket.io": "^4.8.1",
-    "socket.io-client": "^4.8.1"
+    "react-dom": "^18.2.0"
   },
   "devDependencies": {
     "postcss": "^8",
