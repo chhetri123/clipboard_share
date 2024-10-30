@@ -11,9 +11,17 @@ const useClipboardManager = (data) => {
 
   const initializeSocket = useCallback(() => {
     // Create socket connection
-    socketRef.current = io({
-      path: "/api/socket",
-    });
+    socketRef.current = io(
+      {
+        path: "/api/socket",
+      },
+      {
+        transports: ["polling", "websocket"],
+        reconnectionAttempts: 10,
+        reconnectionDelay: 5000,
+        autoConnect: false,
+      }
+    );
 
     // Join user-specific room
     socketRef.current.emit("join-room", data.user.id);
@@ -60,7 +68,6 @@ const useClipboardManager = (data) => {
           }
         );
         const data = await response.json();
-
         if (data.success) {
           setClipboards(data.clipboards);
           setTotalPages(Math.ceil(data.total / itemsPerPage));
