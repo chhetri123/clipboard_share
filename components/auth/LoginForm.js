@@ -29,7 +29,7 @@ export default function LoginForm() {
       if (result.error) {
         setError(result.error);
       } else {
-        // router.push("/dashboard");
+        router.push("/dashboard");
       }
     } catch (err) {
       setError("An error occurred. Please try again.");
