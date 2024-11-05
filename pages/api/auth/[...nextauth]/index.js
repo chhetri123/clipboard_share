@@ -55,21 +55,25 @@ export const authOptions = {
   },
   session: {
     strategy: "jwt",
-    maxAge: 30 * 24 * 60 * 60, // 30 days
+    maxAge: 24 * 60 * 60, // 24 hours
   },
   callbacks: {
-    async jwt({ token }) {
+    async jwt({ token, user }) {
+      if (user) {
+        token.id = user.id;
+        token.email = user.email;
+      }
       return token;
     },
     async session({ session, token }) {
-      if (session?.user) {
-        session.user.id = token.sub;
+      if (session.user) {
+        session.user.id = token.id;
         session.user.email = token.email;
       }
-
       return session;
     },
   },
+  debug: process.env.NODE_ENV === "development",
   secret: process.env.NEXTAUTH_SECRET,
 };
 

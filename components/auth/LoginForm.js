@@ -28,7 +28,7 @@ export default function LoginForm() {
 
       if (result.error) {
         setError(result.error);
-      } else {
+      } else if (result?.ok) {
         router.push("/dashboard");
       }
     } catch (err) {
