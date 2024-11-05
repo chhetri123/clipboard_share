@@ -12,14 +12,17 @@ export default function RegisterForm() {
   const [confirmPin, setConfirmPin] = useState("");
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
+    setIsLoading(true);
 
     if (pin !== confirmPin) {
       setError("PINs do not match");
+      setIsLoading(false);
       return;
     }
 
@@ -32,8 +35,7 @@ export default function RegisterForm() {
 
       const data = await res.json();
       if (data.success) {
-        setSuccess(`${data.message}. Redireting to login...`);
-        // set 2 second redirect time with counter..
+        setSuccess(`${data.message}. Redirecting to login...`);
         setTimeout(() => {
           router.push("/login");
         }, 2000);
@@ -42,6 +44,8 @@ export default function RegisterForm() {
       }
     } catch (err) {
       setError("An error occurred. Please try again.");
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -55,6 +59,7 @@ export default function RegisterForm() {
         id="email"
         onChange={(e) => setEmail(e.target.value)}
         required
+        disabled={isLoading}
       />
       <Input
         type="password"
@@ -64,6 +69,7 @@ export default function RegisterForm() {
         id="pin"
         onChange={(e) => setPin(e.target.value)}
         required
+        disabled={isLoading}
       />
       <Input
         type="password"
@@ -73,11 +79,12 @@ export default function RegisterForm() {
         value={confirmPin}
         onChange={(e) => setConfirmPin(e.target.value)}
         required
+        disabled={isLoading}
       />
       {error && <p className="text-red-500 text-sm">{error}</p>}
-      {success && <p className="text-blue500 text-sm">{success}</p>}
-      <Button type="submit" fullWidth>
-        Register
+      {success && <p className="text-green-500 text-sm">{success}</p>}
+      <Button type="submit" fullWidth disabled={isLoading}>
+        {isLoading ? "Registering..." : "Register"}
       </Button>
       <p className="text-center text-sm text-gray-600">
         Already have an account?{" "}
