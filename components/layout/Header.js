@@ -9,7 +9,7 @@ const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const handleLogout = () => {
-    signOut({ callbackUrl: "/", redirect: true });
+    signOut({ callbackUrl: "/" });
   };
 
   const toggleMenu = () => {
